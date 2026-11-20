@@ -1,0 +1,48 @@
+[server]
+maxUploadSize = 10
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "viewer"
+
+# Tasarım tokenleri. Vurgu rengi: çizimcilerin taslak kalemi "non-photo blue"nun
+# koyulaştırılmış hâli (beyaz zeminde 5.7:1). Grafit metin, nötr kâğıt yüzeyleri.
+[theme]
+font = "Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap, sans-serif"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap, monospace"
+codeFontSize = "0.8125rem"
+headingFontSizes = ["1.75rem", "1.375rem", "1.125rem", "1rem", "0.9375rem", "0.875rem"]
+headingFontWeights = [650, 600, 600, 600, 600, 600]
+baseRadius = "6px"
+buttonRadius = "6px"
+showWidgetBorder = true
+linkUnderline = true
+
+[theme.light]
+primaryColor = "#0F6E8C"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F3F1"
+textColor = "#23272D"
+linkColor = "#0B5A73"
+borderColor = "#D5D9DC"
+codeBackgroundColor = "#F2F3F1"
+
+[theme.light.sidebar]
+backgroundColor = "#F2F3F1"
+secondaryBackgroundColor = "#FFFFFF"
+
+[theme.dark]
+primaryColor = "#227A98"
+backgroundColor = "#15181B"
+secondaryBackgroundColor = "#1F2327"
+textColor = "#E4E7EA"
+linkColor = "#7CC6DF"
+borderColor = "#343A40"
+codeBackgroundColor = "#1F2327"
+
+[theme.dark.sidebar]
+backgroundColor = "#1B1F22"
+secondaryBackgroundColor = "#262B30"

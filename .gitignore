@@ -43,3 +43,7 @@ Thumbs.db
 # Environment
 .env
 .venv
+
+# Araç önbellekleri
+.pytest_cache/
+.ruff_cache/
