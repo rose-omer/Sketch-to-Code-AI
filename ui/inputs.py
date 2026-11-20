@@ -117,7 +117,7 @@ def render_review(pid: str, source: Source, settings: state.Settings) -> state.A
     columns[0].image(result.original, caption="Orijinal fotoğraf", width="stretch")
     columns[1].image(result.corrected, caption="Düzeltilmiş: perspektif, gölge, kontrast", width="stretch")
     columns[2].image(
-        vision.draw_boxes(result.corrected, result.boxes),
+        vision.draw_boxes(result.corrected, result.boxes, color=theme.ACCENT_RGB),
         caption=f"Algılanan kutular: {len(result.boxes)}. Modele düzen ipucu olarak gider.",
         width="stretch",
     )

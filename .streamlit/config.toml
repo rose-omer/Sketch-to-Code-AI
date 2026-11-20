@@ -1,6 +1,8 @@
 [server]
 maxUploadSize = 10
 headless = true
+# Yalnız static/fonts için: Archivo yerelde barınır. Kod yazı tipi sistemden gelir; dış yazı tipi isteği yok.
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
@@ -8,41 +10,58 @@ gatherUsageStats = false
 [client]
 toolbarMode = "viewer"
 
-# Tasarım tokenleri. Vurgu rengi: çizimcilerin taslak kalemi "non-photo blue"nun
-# koyulaştırılmış hâli (beyaz zeminde 5.7:1). Grafit metin, nötr kâğıt yüzeyleri.
+# Tasarım dili "Önce ve Sonra": beyaz kâğıt, lacivert mürekkep, taslak mavisi vurgu.
+# Mürekkep #18203A beyazda 16:1; silik metin #4D5670 7.3:1; vurgu #2A46E8 beyaz metinle 6.7:1.
+# Archivo değişken yazı tipi (wdth 62–125, wght 100–900), static/fonts altında; başlıklar geniş kesimde.
+[[theme.fontFaces]]
+family = "Archivo Variable"
+url = "app/static/fonts/archivo-latin-wdth-normal.woff2"
+weight = "100 900"
+style = "normal"
+unicodeRange = "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+
+[[theme.fontFaces]]
+family = "Archivo Variable"
+url = "app/static/fonts/archivo-latin-ext-wdth-normal.woff2"
+weight = "100 900"
+style = "normal"
+unicodeRange = "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF"
+
 [theme]
-font = "Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap, sans-serif"
-codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap, monospace"
+font = "Archivo Variable, sans-serif"
+codeFont = "ui-monospace, Consolas, monospace"
 codeFontSize = "0.8125rem"
-headingFontSizes = ["1.75rem", "1.375rem", "1.125rem", "1rem", "0.9375rem", "0.875rem"]
-headingFontWeights = [650, 600, 600, 600, 600, 600]
-baseRadius = "6px"
-buttonRadius = "6px"
+baseFontSize = 16
+headingFontSizes = ["2rem", "1.375rem", "1rem", "0.95rem", "0.9rem", "0.875rem"]
+headingFontWeights = [800, 700, 700, 700, 700, 700]
+baseRadius = "4px"
+buttonRadius = "4px"
 showWidgetBorder = true
 linkUnderline = true
 
 [theme.light]
-primaryColor = "#0F6E8C"
+primaryColor = "#2A46E8"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F2F3F1"
-textColor = "#23272D"
-linkColor = "#0B5A73"
-borderColor = "#D5D9DC"
-codeBackgroundColor = "#F2F3F1"
+secondaryBackgroundColor = "#F3F4F8"
+textColor = "#18203A"
+linkColor = "#1F4FD1"
+borderColor = "#D7DBE6"
+codeBackgroundColor = "#F3F4F8"
 
 [theme.light.sidebar]
-backgroundColor = "#F2F3F1"
+backgroundColor = "#F3F4F8"
 secondaryBackgroundColor = "#FFFFFF"
 
+# Koyu: mürekkep zemine döner. Vurgu #4560F5 beyaz metinle 5:1, zeminde 3.5:1 (odak halkası).
 [theme.dark]
-primaryColor = "#227A98"
-backgroundColor = "#15181B"
-secondaryBackgroundColor = "#1F2327"
-textColor = "#E4E7EA"
-linkColor = "#7CC6DF"
-borderColor = "#343A40"
-codeBackgroundColor = "#1F2327"
+primaryColor = "#4560F5"
+backgroundColor = "#121831"
+secondaryBackgroundColor = "#1B2242"
+textColor = "#E6E9F2"
+linkColor = "#A9B8FF"
+borderColor = "#343C5C"
+codeBackgroundColor = "#1B2242"
 
 [theme.dark.sidebar]
-backgroundColor = "#1B1F22"
-secondaryBackgroundColor = "#262B30"
+backgroundColor = "#171E3A"
+secondaryBackgroundColor = "#222A4D"

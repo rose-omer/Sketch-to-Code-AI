@@ -57,8 +57,12 @@ def test_generate_preview_refine_and_undo(app: AppTest, monkeypatch: pytest.Monk
         proto = str(frames[0].proto)
         assert 'sandbox=\\"allow-scripts\\"' in proto
         assert "allow-same-origin" not in proto
+        assert 'id=\\"split\\"' in proto  # önce/sonra kaydırıcısı, çizim katmanı sarmalayıcıda
+        status = [str(h.proto.body) for h in app.get("html") if 'role="status"' in str(h.proto.body)]
+        assert any("Sonraki istek v2 olur" in body for body in status)  # durum satırı role=status
 
-        app.chat_input[0].set_value("başlığı ortala").run()
+        app.text_input(key="refine_ornek").input("başlığı ortala")
+        _button(app, "Gönder").click().run()
         page = app.session_state["pages"]["ornek"]
         assert page["current"] == 1
         assert page["versions"][1]["html"] == REFINED
@@ -131,3 +135,54 @@ def test_daily_limit_applies_to_owner_key(app: AppTest, monkeypatch: pytest.Monk
     assert _button(app, "Yeniden üret").disabled
     assert any(workspace.QUOTA_MESSAGE in c.value for c in app.caption)
     state._quota.clear()
+
+
+@pytest.mark.parametrize(
+    ("box", "title"),
+    [
+        ((0.05, 0.02, 0.9, 0.1), "Üst bant"),
+        ((0.05, 0.4, 0.25, 0.2), "Orta sol"),
+        ((0.4, 0.4, 0.2, 0.2), "Merkez"),
+        ((0.7, 0.8, 0.2, 0.15), "Alt sağ"),
+    ],
+)
+def test_box_description_names_position_not_type(box: tuple[float, ...], title: str) -> None:
+    from sketch2code.vision import Box
+    from ui.workspace import describe_box
+
+    name, detail = describe_box(Box(*box))
+
+    assert name == title
+    assert detail == f"Genişlik %{round(box[2] * 100)}, yükseklik %{round(box[3] * 100)}"
+
+
+def test_output_choices_live_in_workspace_and_reach_prompt(app: AppTest, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    client = FakeClient([split_stream(PAGE)])
+
+    with patch("sketch2code.llm.make_client", return_value=client):
+        app.run()
+        assert app.session_state["out_style"] == "Sade"  # çizim yokken de değer korunur
+        _button(app, "Örnekle dene").click().run()
+        app.selectbox(key="out_style").select("Cesur").run()
+        _button(app, "Kodu üret").click().run()
+
+    assert not app.exception
+    assert not [s for s in app.sidebar.selectbox if s.label in ("CSS altyapısı", "Renkler", "Stil")]
+    assert app.session_state["pages"]["ornek"]["versions"][0]["label"] == "Üretim, cesur"
+    assert "Cesur" in client.models.calls[0]["contents"][1]
+
+
+def test_version_label_escapes_markdown() -> None:
+    from ui.workspace import version_label
+
+    label = version_label(1, {"label": "**kalın** [bağ](x) :red[y]", "created": "19:42:09"})
+
+    assert label == r"v2 **\*\*kalın\*\* \[bağ\]\(x\) \:red\[y\]** *19\:42\:09*"
+
+
+def test_long_code_scrolls_and_short_code_fits() -> None:
+    from ui.workspace import CODE_MAX_HEIGHT, code_height
+
+    assert code_height("<p>x</p>") == "content"
+    assert code_height("<p>x</p>\n" * 40) == CODE_MAX_HEIGHT

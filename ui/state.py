@@ -16,6 +16,13 @@ from sketch2code import llm, palette, prompts, quota, samples, vision
 
 SAMPLE_ID = "ornek"
 
+# Çıktı seçimleri (CSS altyapısı, renkler, stil) adım 3'ün sağ sütununda çizilir (workspace).
+OUTPUT_DEFAULTS: dict[str, str] = {
+    "out_framework": next(iter(prompts.FRAMEWORKS)),
+    "out_colors": list(prompts.COLOR_SCHEMES)[1],
+    "out_style": prompts.DESIGN_STYLES[0],
+}
+
 
 @dataclass
 class Analysis:
@@ -48,6 +55,9 @@ def init_state() -> None:
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
+    # Seçici çizilmeyen çalıştırmada (ör. çizim yokken) Streamlit değeri siler; yeniden yazmak korur.
+    for key, value in OUTPUT_DEFAULTS.items():
+        st.session_state[key] = st.session_state.get(key, value)
 
 
 def secrets_mapping() -> dict[str, Any]:

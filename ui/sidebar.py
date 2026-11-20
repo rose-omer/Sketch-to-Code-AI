@@ -1,4 +1,7 @@
-"""Kenar çubuğu: anahtar, çıktı seçenekleri, gelişmiş ayarlar ve proje dosyası."""
+"""Kenar çubuğu: anahtar, kod seçenekleri, gelişmiş ayarlar ve proje dosyası.
+
+CSS altyapısı, renkler ve stil adım 3'ün sağ sütunundadır (workspace); değerleri oturum durumundan okunur.
+"""
 
 from __future__ import annotations
 
@@ -29,10 +32,7 @@ def _key_section() -> tuple[str, str]:
 
 
 def _options_section() -> prompts.GenerationOptions:
-    st.subheader("Çıktı")
-    framework = st.selectbox("CSS altyapısı", list(prompts.FRAMEWORKS))
-    color_scheme = st.selectbox("Renkler", list(prompts.COLOR_SCHEMES), index=1)
-    design_style = st.selectbox("Stil", prompts.DESIGN_STYLES)
+    st.subheader("Kod seçenekleri")
     responsive = st.toggle("Mobil uyumlu", value=True)
     add_accessibility = st.toggle("Erişilebilirlik kuralları", value=True)
     add_seo = st.toggle("SEO etiketleri", value=False)
@@ -44,9 +44,9 @@ def _options_section() -> prompts.GenerationOptions:
         height=96,
     )
     return prompts.GenerationOptions(
-        framework=framework,
-        color_scheme=color_scheme,
-        design_style=design_style,
+        framework=st.session_state.out_framework,
+        color_scheme=st.session_state.out_colors,
+        design_style=st.session_state.out_style,
         responsive=responsive,
         animations=animations,
         add_seo=add_seo,

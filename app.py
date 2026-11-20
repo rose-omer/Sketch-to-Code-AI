@@ -10,13 +10,22 @@ import logging
 
 import streamlit as st
 
+from sketch2code import llm
 from ui import inputs, sidebar, state, theme, workspace
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 def main() -> None:
-    st.set_page_config(page_title="Sketch-to-Code", page_icon=":material/draw:", layout="wide")
+    # Anahtar sunucuda tanımlıysa kenar çubuğu kapalı açılır: sahne geniş kalır (tasarımda kenar çubuğu yok).
+    # Anahtar yoksa açık açılır; anahtar girişi oradadır.
+    server_key, _ = llm.resolve_api_key(state.secrets_mapping(), state.env(), "")
+    st.set_page_config(
+        page_title="Sketch-to-Code",
+        page_icon=":material/draw:",
+        layout="wide",
+        initial_sidebar_state="collapsed" if server_key else "auto",
+    )
     theme.inject()
     state.init_state()
     settings = sidebar.render()

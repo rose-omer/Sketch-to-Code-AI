@@ -1,5 +1,6 @@
 """palette, preview, export, history ve prompts için birim testleri."""
 
+import base64
 import html
 import io
 import re
@@ -7,6 +8,7 @@ import zipfile
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from sketch2code import export, history, palette, preview, prompts
 from sketch2code.vision import Box
@@ -101,6 +103,55 @@ def test_iframe_has_title_and_real_device_width() -> None:
 
     assert f'title="{preview.PREVIEW_TITLE}"' in wrapper
     assert "width:375px;height:812px" in wrapper
+
+
+def _compare(html_code: str = HOSTILE, label: str = "v2, 1280 px", dark: bool = False) -> str:
+    boxes = [Box(0.1, 0.05, 0.8, 0.1), Box(0.5, 0.2, 0.4, 0.3)]
+    return preview.compare(html_code, "data:image/jpeg;base64,AAAA", 1.4, boxes, 1280, label, dark=dark)
+
+
+def test_compare_keeps_preview_sandboxed_and_escaped() -> None:
+    wrapper = _compare()
+    sandboxes = re.findall(r'sandbox="([^"]*)"', wrapper)
+
+    assert sandboxes == ["allow-scripts"]  # tek iframe: üretilen sayfa
+    for forbidden in ("allow-same-origin", "allow-top-navigation", "allow-forms", "allow-popups"):
+        assert forbidden not in wrapper
+    assert html.unescape(_srcdoc(wrapper)) == preview.with_csp(HOSTILE)
+
+
+def test_compare_stage_uses_sketch_ratio_and_numbers_boxes() -> None:
+    wrapper = _compare()
+
+    assert "width:1280px;height:1792px" in wrapper  # 1280 × 1.4
+    assert re.findall(r'<div class="mark"[^>]*><b>(\d+)</b>', wrapper) == ["1", "2"]
+    assert 'alt="Önce: düzeltilmiş çizim ve 2 kutu"' in wrapper
+    assert '<input id="split" type="range"' in wrapper and "Karşılaştırma çizgisi" in wrapper
+    assert f"<title>{preview.COMPARE_TITLE}</title>" in wrapper  # sarmalayıcı belgenin adı
+
+
+def test_compare_escapes_label_and_follows_theme() -> None:
+    wrapper = _compare(label='<img src=x onerror="alert(1)">', dark=True)
+
+    assert "<img src=x" not in wrapper
+    assert 'data-theme="dark"' in wrapper
+
+
+def test_compare_clamps_extreme_sketch_ratio() -> None:
+    low, high = preview.COMPARE_RATIO
+    tall = preview.compare("<p>x</p>", "data:,", 9.0, [], 375, "v1")
+    wide = preview.compare("<p>x</p>", "data:,", 0.1, [], 375, "v1")
+
+    assert f"width:375px;height:{round(375 * high)}px" in tall
+    assert f"width:375px;height:{round(375 * low)}px" in wide
+
+
+def test_image_data_url_is_jpeg_and_downscaled() -> None:
+    url = preview.image_data_url(np.full((300, 2000, 3), 240, dtype=np.uint8), max_width=500)
+    image = Image.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1])))
+
+    assert url.startswith("data:image/jpeg;base64,")
+    assert image.size == (500, 75)
 
 
 def test_fixed_scale_disables_fit_script() -> None:
