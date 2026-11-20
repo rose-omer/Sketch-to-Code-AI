@@ -13,6 +13,21 @@ gerçek cihaz genişliğinde önizlenir; sohbetle düzeltilir ve sürümlenir.
 *Soldan sağa: masada çekilmiş fotoğraf, perspektifi ve gölgesi düzeltilmiş çizim, modele düzen
 ipucu olarak giden kutular. Görüntü `sketch2code/samples.py` ile üretilen örnektir.*
 
+## Ekran görüntüleri
+
+Görüntüler "Örnekle dene" çizimiyle alındı. Kod üretimi API anahtarı ister; bu adım görüntülerde yok.
+
+| | |
+|---|---|
+| ![Başlangıç](docs/ekran/1-giris.png)<br>Başlangıç | ![Örnek çizim](docs/ekran/2-ornek-cizim.png)<br>Örnek çizim |
+| ![Algılanan kutular ve renk paleti](docs/ekran/3-analiz.png)<br>Algılanan kutular ve renk paleti |  |
+
+## Kullanım
+
+![Kullanım akışı](docs/ekran/kullanim.gif)
+
+Çizim fotoğrafı yüklenir, düzeltilir ve kutular algılanır. Üretilen sayfa kaydırıcıyla çizimin üstünde karşılaştırılır.
+
 ## Akış
 
 1. **Yükle.** JPG ya da PNG (en çok 10 MB), telefonda kamera, ya da "Örnekle dene".
