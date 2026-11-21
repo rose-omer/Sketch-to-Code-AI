@@ -1,378 +1,155 @@
-# 🎨 Sketch-to-Code AI
+# Sketch-to-Code
 
-> **Computer Vision** + **Generative AI** = Profesyonel Web Siteleri
+Kâğıda çizilmiş bir web sayfası taslağının fotoğrafını düzeltir, düzeni algılar ve Gemini ile
+çalışan, tek dosyalık bir HTML sayfasına çevirir. Üretilen sayfa yalıtılmış bir çerçevede,
+gerçek cihaz genişliğinde önizlenir; sohbetle düzeltilir ve sürümlenir.
 
-El çizimi web sitesi taslağını profesyonel HTML/CSS koduna dönüştüren gelişmiş AI uygulaması.
+[![CI](https://github.com/rose-omer/Sketch-to-Code-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/rose-omer/Sketch-to-Code-AI/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-lightgrey.svg)](LICENSE)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.39-FF4B4B.svg)](https://streamlit.io)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.10-green.svg)](https://opencv.org/)
+![Telefon fotoğrafı, düzeltilmiş çizim ve algılanan kutular](assets/pipeline.jpg)
 
----
+*Soldan sağa: masada çekilmiş fotoğraf, perspektifi ve gölgesi düzeltilmiş çizim, modele düzen
+ipucu olarak giden kutular. Görüntü `sketch2code/samples.py` ile üretilen örnektir.*
 
-## 📖 Hakkında
+## Ekran görüntüleri
 
-Bu proje, el çizimi wireframe'leri modern, responsive web sitelerine dönüştürmek için Computer Vision ve Generative AI teknolojilerini birleştirir. LinkedIn portföy projesi olarak Senior Full-Stack AI Mühendisliği yeteneklerini sergiler.
+Görüntüler "Örnekle dene" çizimiyle alındı. Kod üretimi API anahtarı ister; bu adım görüntülerde yok.
 
----
+| | |
+|---|---|
+| ![Başlangıç](docs/ekran/1-giris.png)<br>Başlangıç | ![Örnek çizim](docs/ekran/2-ornek-cizim.png)<br>Örnek çizim |
+| ![Algılanan kutular ve renk paleti](docs/ekran/3-analiz.png)<br>Algılanan kutular ve renk paleti |  |
 
-## 🚀 Özellikler
+## Kullanım
 
-### 🎯 Temel Özellikler
-- ✅ **Computer Vision**: OpenCV ile görüntü ön işleme (Grayscale + Adaptive Thresholding)
-- ✅ **Generative AI**: Google Gemini 2.5 Flash ile akıllı kod üretimi
-- ✅ **Modern UI**: Streamlit ile kullanıcı dostu 4 sekme arayüz
-- ✅ **Canlı Önizleme**: Oluşturulan web sitesini anında görüntüleme
+![Kullanım akışı](docs/ekran/kullanim.gif)
 
-### 🆕 Gelişmiş Özellikler
+Çizim fotoğrafı yüklenir, düzeltilir ve kutular algılanır. Üretilen sayfa kaydırıcıyla çizimin üstünde karşılaştırılır.
 
-#### 1. 📊 Çoklu Görsel Desteği
-- Birden fazla sayfa çizimi yükleme
-- Her sayfa için ayrı kod üretimi
-- Çok sayfalı web siteleri oluşturma
+## Akış
 
-#### 2. 🔄 Versiyon Karşılaştırma
-- Tek tıkla 3 farklı stil versiyonu oluşturma
-- Yan yana karşılaştırma
-- İstediğinizi seçip indirme
+1. **Yükle.** JPG ya da PNG (en çok 10 MB), telefonda kamera, ya da "Örnekle dene".
+2. **Düzelt ve incele.** Görüntü hattı çalışır; orijinal, düzeltilmiş ve kutulu görüntü yan yana
+   görünür. Kâğıt bulunamazsa uyarı çıkar ve elle kırpma açılır. Palet hex etiketleriyle listelenir.
+3. **Üret ve düzenle.** Kod akarak gelir. Önizleme masaüstü (1280), tablet (768), mobil (375) ya da
+   yan yana açılır. "Kartları üç sütun yap" gibi isteklerle sayfa yeniden yazılır; her istek yeni
+   bir sürümdür. Geri alma, sürüm farkı, HTML ve ZIP indirme vardır.
 
-#### 3. 🛠️ Framework Seçimi
-- **Tailwind CSS**: Utility-first modern yaklaşım
-- **Bootstrap 5**: Popüler component library
-- **Pure CSS**: Vanilla CSS, framework'sız
+## Mimari
 
-#### 4. 📱 Cihaz Önizleme
-- 🖥️ Desktop görünümü (1920x1080)
-- 📱 Tablet görünümü (768x1024)
-- 📱 Mobile görünümü (375x667)
-- Responsive test arayüzü
+```
+fotoğraf ─► sketch2code/vision.py ─► düzeltilmiş renkli görüntü + kutular (JSON)
+                                           │
+                                           ▼
+            sketch2code/prompts.py ─► sketch2code/llm.py (google-genai, oturum başına Client)
+                                           │  akış
+                                           ▼
+            sketch2code/preview.py ─► sandbox iframe (opak köken, CSP) ─► st.iframe
+```
 
-#### 5. 🎨 Renk Paleti Çıkarıcı
-- KMeans clustering ile otomatik renk analizi
-- Görselden 5 baskın renk çıkarma
-- Çıkarılan renkleri tasarımda kullanma
+| Modül | Görev |
+|---|---|
+| `sketch2code/vision.py` | EXIF yönü, RGB'ye çevirme, kâğıt bulma (Otsu + Canny), perspektif, gölge alma, CLAHE, eğim, kutu algılama |
+| `sketch2code/palette.py` | KMeans ile baskın renkler |
+| `sketch2code/llm.py` | Gemini istemcisi, akış, tek yeniden deneme, hata türleri, yapılandırılmış öneriler (Pydantic) |
+| `sketch2code/prompts.py` | Sistem talimatı ve istemler; kullanıcı metni sınırlayıcı etiket içinde ve 600 karakterle sınırlı |
+| `sketch2code/preview.py` | Güvenli önizleme sarmalayıcısı |
+| `sketch2code/history.py` | Sayfa başına sürümler, geri alma, fark |
+| `sketch2code/export.py` | ZIP ve proje dosyası (.json) |
+| `sketch2code/quota.py` | Herkese açık demo için günlük üretim sınırı |
+| `eval/` | Değerlendirme hattı (SSIM, blok eşleşmesi) |
+| `ui/`, `app.py` | Streamlit arayüzü |
 
-#### 6. 💡 AI Öneri Sistemi
-- Çizime bakarak akıllı öneriler
-- Eksik özellikler hakkında bilgilendirme
-- UX iyileştirme tavsiyeleri
+`sketch2code/` Streamlit'e bağlı değildir; test edilebilir saf fonksiyonlardan oluşur.
 
-#### 7. 🚀 SEO & Accessibility
-- **SEO**: Meta tags, Open Graph, Twitter Cards, Semantic HTML5
-- **Accessibility**: ARIA labels, alt texts, keyboard navigation, focus indicators
-- Tek tıkla ekleme
+## Güvenlik ve veri
 
-#### 8. 📦 Gelişmiş Export
-- **HTML**: Tek dosya olarak
-- **ZIP**: Tüm dosyalar paketlenmiş (HTML + README)
-- **React Component**: JSX formatında
-- **Vue Component**: (Planlanan)
+- **Önizleme yalıtımı.** Model çıktısı güvenilmez sayılır. Sayfa `sandbox="allow-scripts"` ile açılan
+  iç iframe'de çalışır; `allow-same-origin`, `allow-top-navigation`, `allow-forms`, `allow-popups`
+  verilmez. Belge opak kökendedir: Streamlit sayfasına, çerezlere ve üst pencereye erişemez.
+  Belgenin başına CSP eklenir: ağ isteği yok, betik ve stil yalnız Tailwind ve jsDelivr CDN'lerinden.
+  Bu davranış Playwright testleriyle gerçek tarayıcıda doğrulanır.
+- **Anahtar.** Sıra: `st.secrets["GEMINI_API_KEY"]` → `GEMINI_API_KEY` ortam değişkeni → kenar
+  çubuğu (kendi anahtarınızı getirin). Her oturum kendi `genai.Client` nesnesini kullanır; süreç
+  geneli yapılandırma yoktur. Anahtar diske yazılmaz.
+- **Veri kullanımı.** Gemini ücretsiz katmanında Google gönderilen içeriği ürün geliştirmede
+  kullanabilir. Gizli çizim yüklemeyin.
 
-#### 9. 🔗 Sosyal Paylaşım
-- QR kod oluşturma
-- Embed kodu üretme
-- Paylaşım URL'si
+## Kurulum
 
-#### 10. 📚 Geçmiş/History
-- Son 20 tasarımı otomatik kaydetme
-- Favori işaretleme
-- Geri yükleme
-- Mini önizlemeler
-
-#### 11. 🎨 Kişiselleştirme
-- 5 renk paleti seçeneği
-- 5 tasarım stili
-- Responsive toggle
-- Animasyon toggle
-- Özel istek text alanı
-
----
-
-## 📦 Kurulum
-
-### Gereksinimler
-- Python 3.8+
-- pip
-
-### Adımlar
-
-1. **Repository'yi klonlayın veya indirin**
-
-2. **Bağımlılıkları yükleyin:**
+Python 3.12 gerekir.
 
 ```bash
-# Basit versiyon için
-pip install -r requirements.txt
-
-# Gelişmiş versiyon için
-pip install -r requirements_advanced.txt
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
+pip install --only-binary :all: -r requirements.txt
 ```
 
-3. **Google API Key alın:**
-   - [Google AI Studio](https://makersuite.google.com/app/apikey) adresine gidin
-   - Ücretsiz API anahtarı oluşturun
+Anahtarı [Google AI Studio](https://aistudio.google.com/apikey) üzerinden alın. İsterseniz
+`.streamlit/secrets.toml` dosyasına yazın (repoya girmez):
 
----
+```toml
+GEMINI_API_KEY = "..."
+```
 
-## ▶️ Çalıştırma
+## Çalıştırma
 
-### Basit Versiyon
 ```bash
-streamlit run app.py
+streamlit run app.py --server.port 8101
 ```
 
-### Gelişmiş Versiyon (ÖNERİLEN)
+| Ortam değişkeni | Varsayılan | Açıklama |
+|---|---|---|
+| `GEMINI_API_KEY` | yok | Yoksa kenar çubuğundan girilir |
+| `MODEL_CODE` | `gemini-4-hydrogen` | Kod üretimi ve sohbetle düzeltme |
+| `MODEL_FAST` | `gemini-3.5-flash-lite` | Öneriler (JSON) |
+| `DAILY_GENERATION_LIMIT` | yok (sınırsız) | Herkese açık demo: sahibin anahtarıyla ziyaretçi (IP özeti) başına günlük üretim sayısı. Kullanıcı kendi anahtarını girerse uygulanmaz. |
+
+Model adları kenar çubuğundaki "Gelişmiş" bölümünden de değişir. Tema Streamlit ayar menüsünden
+açık ya da koyu seçilir; önizleme her zaman üretilen sayfanın kendi renkleriyle açılır.
+
+## Geliştirme
+
 ```bash
-streamlit run app_advanced.py
+pip install --only-binary :all: -r requirements-dev.txt
+ruff check . && ruff format --check .
+pytest -m "not browser"          # birim + arayüz (AppTest) testleri, sahte Gemini istemcisiyle
+playwright install chromium      # bir kez
+pytest -m browser                # sandbox ve medya sorgusu testleri, gerçek Chromium
 ```
 
-Tarayıcınızda otomatik olarak açılacaktır: `http://localhost:8501`
+Testler gerçek Gemini çağrısı yapmaz. CI (`.github/workflows/ci.yml`) lint, birim ve tarayıcı
+testlerini Python 3.12 ile koşar.
 
----
+## Değerlendirme
 
-## 🎯 Kullanım Kılavuzu
+`eval/` hattı çizimden kod üretir, Playwright ile 1280 px'te render eder ve hedef sayfayla karşılaştırır.
 
-### Adım 1: Kurulum
-1. Uygulamayı başlatın
-2. Sol sidebar'dan Google API Key'inizi girin
+- Kipler: `raw` (fotoğraf olduğu gibi), `binary` (gri + uyarlanır eşik, eski yöntem), `pipeline`
+  (`vision.py` hattı + kutu ipucu).
+- Ölçütler: SSIM (gri, 640 px), blok konumu eşleşmesi (DOM blokları, IoU ile birebir eşleme),
+  üretim süresi, çıktı uzunluğu.
+- Veri: [Sketch2Code](https://huggingface.co/datasets/SALT-NLP/Sketch2Code-hf) veri setinin yerel kopyası.
+  Klasörde `<sayfa>.html` ve `<sayfa>_<n>.png` çiftleri olmalı. Veri repoya girmez; lisansını
+  kullanmadan önce okuyun.
 
-### Adım 2: Tasarım Tercihleri
-3. Framework seçin (Tailwind/Bootstrap/Pure CSS)
-4. Renk paleti ve stil seçin
-5. Responsive/Animasyon tercihlerinizi belirleyin
-6. İsteğe bağlı: SEO ve Accessibility ekleyin
-
-### Adım 3: Görsel Yükleme
-7. "Yeni Tasarım" sekmesinden çiziminizi yükleyin
-8. Renk paletini inceleyin
-9. (Opsiyonel) AI önerilerini alın
-
-### Adım 4: Kod Oluşturma
-
-**Tek Versiyon için:**
-- "Kodu Oluştur" butonuna tıklayın
-
-**Çoklu Versiyon için:**
-- "3 Versiyon Oluştur" butonuna tıklayın
-- "Versiyon Karşılaştır" sekmesine geçin
-
-### Adım 5: Önizleme & Export
-10. Önizleme sekmesinde canlı görüntüleyin
-11. Kod sekmesinde inceleyip kopyalayın
-12. Export sekmesinden istediğiniz formatta indirin
-13. Paylaş sekmesinden QR kod/embed kod alın
-
-### Adım 6: Cihaz Testleri
-14. "Cihaz Önizleme" sekmesine geçin
-15. Desktop, Tablet, Mobile görünümleri test edin
-
-### Adım 7: Geçmiş
-16. "Geçmiş" sekmesinden önceki tasarımlarınıza ulaşın
-17. Favori işaretleyin veya geri yükleyin
-
----
-
-## 🛠️ Teknolojiler
-
-### Backend & AI
-- **Python 3.11**: Ana programlama dili
-- **Google Generative AI (Gemini 2.5 Flash)**: Kod üretimi
-- **OpenCV**: Görüntü işleme
-- **NumPy**: Matris operasyonları
-- **Scikit-learn**: KMeans clustering (renk analizi)
-
-### Frontend & UI
-- **Streamlit**: Web arayüzü framework
-- **Pillow (PIL)**: Görüntü formatları
-
-### Utilities
-- **qrcode**: QR kod oluşturma
-- **zipfile**: Dosya paketleme
-- **base64**: Encoding işlemleri
-- **json**: Veri saklama
-
-### Generated Code
-- **Tailwind CSS / Bootstrap / Pure CSS**: Kullanıcı seçimine göre
-- **HTML5 Semantic**: Modern, erişilebilir markup
-- **Responsive Design**: Mobile-first yaklaşım
-
----
-
-## 📸 Ekran Görüntüleri
-
-### Ana Ekran
-- Çoklu dosya yükleme
-- Renk paleti çıkarma
-- AI önerileri
-
-### Versiyon Karşılaştırma
-- 3 farklı stil yan yana
-- Hızlı önizleme
-- Tek tıkla indirme
-
-### Cihaz Önizleme
-- Desktop/Tablet/Mobile
-- Gerçek boyutlarda test
-
-### Geçmiş
-- Timeline görünümü
-- Favori sistemi
-- Geri yükleme
-
----
-
-## 💡 En İyi Sonuçlar İçin İpuçları
-
-### Çizim Kalitesi
-- ✏️ Net ve okunaklı çizin
-- 📐 Ana bölümleri (header, content, footer) belirgin yapın
-- 🔲 Kutuları ve bileşenleri işaretleyin
-- 💡 İyi aydınlatmalı ortamda fotoğraf çekin
-- 📄 Beyaz kağıt + siyah kalem ideal kombinasyon
-
-### Element Örnekleri
-- **Header**: Logo, navigasyon menüsü
-- **Hero Section**: Büyük görsel, başlık, CTA butonu
-- **Content**: Kartlar, grid layout, listeler
-- **Footer**: İletişim, sosyal medya, copyright
-
-### Özel İstekler
-- "Animasyonlu hero section ekle"
-- "3 sütunlu özellik kartları"
-- "Sosyal medya iconları footer'da"
-- "İletişim formu ile newsletter kaydı"
-- "Sticky header navigation"
-
----
-
-## 🔧 Özelleştirme
-
-### API Model Değiştirme
-```python
-# app_advanced.py içinde
-model = genai.GenerativeModel('gemini-2.5-flash')  # Mevcut
-
-# Alternatifler:
-# model = genai.GenerativeModel('gemini-2.5-pro')  # Daha güçlü
-# model = genai.GenerativeModel('gemini-2.0-flash')  # Daha hızlı
-```
-
-### History Limiti
-```python
-# save_to_history fonksiyonunda
-if len(st.session_state.history) > 20:  # 20'den fazla tutma
-    # İstediğiniz sayıyı değiştirebilirsiniz
-```
-
-### Renk Sayısı
-```python
-# extract_color_palette fonksiyonunda
-extracted_colors = extract_color_palette(image, n_colors=5)
-# n_colors parametresini değiştirin
-```
-
----
-
-## 📊 Proje Yapısı
-
-```
-Sketch-to-Code/
-├── app.py                      # Basit versiyon
-├── app_advanced.py             # Gelişmiş versiyon (ÖNERİLEN)
-├── test_api.py                 # API test scripti
-├── requirements.txt            # Basit versiyon bağımlılıkları
-├── requirements_advanced.txt   # Gelişmiş versiyon bağımlılıkları
-└── README.md                   # Bu dosya
-```
-
----
-
-## 🐛 Sorun Giderme
-
-### "API Key geçersiz" hatası
-- API Key'in doğru kopyalandığından emin olun
-- [Google AI Studio](https://makersuite.google.com/app/apikey)'da yeni key oluşturun
-- API Key'in aktif olmasını bekleyin (5-10 dakika)
-
-### "Model bulunamadı" hatası
-- `test_api.py` scriptini çalıştırın
-- Mevcut modelleri listeleyin
-- `app_advanced.py` içinde model adını güncelleyin
-
-### Görsel yüklenmiyor
-- Dosya boyutunu kontrol edin (max 5MB önerilir)
-- Desteklenen formatlar: JPG, PNG
-- Görseli yeniden kaydetmeyi deneyin
-
-### Streamlit çalışmıyor
 ```bash
-pip uninstall streamlit
-pip install streamlit==1.39.0
+python -m eval.run --data ./veri --subset 5 --dry-run   # API çağrısı yok; hattı sınar, skor ≈ 1
+python -m eval.run --data ./veri --subset 30            # GEMINI_API_KEY ister; eval/results.md yazar
 ```
 
-### Paket hatası
-```bash
-pip install --upgrade -r requirements_advanced.txt
-```
+Sonuç tablosu henüz yok: ölçüm gerçek API çağrısı ve veri seti gerektirir. Tablo `eval/results.md`
+dosyasına yazılınca buraya özeti eklenecek.
 
----
+## Yol haritası
 
-## 🚀 Gelecek Özellikler (Roadmap)
+- `eval/results.md` ölçümü ve README'ye sayısal özet.
+- Öz denetim: üretilen sayfayı Playwright ile render edip eksik bölge ve taşmayı modele sordurmak
+  (Docker dağıtımında, `ENABLE_SELF_CHECK=1`).
+- Docker imajı ve barındırılan demo.
 
-- [ ] Vue.js component export
-- [ ] Gerçek URL'de hosting ve canlı paylaşım
-- [ ] Dark/Light mode toggle
-- [ ] Çoklu dil desteği (İngilizce, Türkçe)
-- [ ] Video tutorial entegrasyonu
-- [ ] Template library
-- [ ] Collaborative editing
-- [ ] Version control (Git entegrasyonu)
-- [ ] A/B testing için analitik
-- [ ] AI ile otomatik bug fix
+## Lisans
 
----
-
-## 👨‍💻 Geliştirici
-
-**LinkedIn Portföy Projesi**  
-Senior Full-Stack AI Mühendisi
-
-### Yetenekler Sergisi:
-- ✅ Computer Vision (OpenCV)
-- ✅ Generative AI (Google Gemini)
-- ✅ Python Backend Development
-- ✅ UI/UX Design (Streamlit)
-- ✅ Machine Learning (KMeans)
-- ✅ API Integration
-- ✅ Data Visualization
-- ✅ Clean Code & Documentation
-
----
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altındadır. Eğitim ve portfolyo amaçlı kullanım için özgürdür.
-
----
-
-## 🙏 Teşekkürler
-
-- Google AI Studio - Ücretsiz Gemini API
-- Streamlit - Harika web framework
-- OpenCV - Güçlü görüntü işleme
-- Tüm open-source katkıda bulunanlara
-
----
-
-## 📞 İletişim
-
-Proje hakkında sorularınız için:
-- LinkedIn profilimden ulaşabilirsiniz
-- Issue açabilirsiniz
-- Pull request gönderebilirsiniz
-
----
-
-**⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın!**
-
+MIT. Ayrıntı: [LICENSE](LICENSE).
